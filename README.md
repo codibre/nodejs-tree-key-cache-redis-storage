@@ -45,7 +45,7 @@ const storage = new TreeKeyCacheSimpleRedisStorage({
 ## Insert Only Redis Storage
 
 This is a key history enabled implementation, ideal if you need to keep every registered value for a key separated. Aside from all the functionalities that **TreeKeyCacheSimpleRedisStorage** delivers, it also implement **getHistory**, which will return every single non expired value of the given key, from the latest to the oldest.
-Although we don't explicit control it, this implementation assumes that older keys expires first, so, be aware that, if you have N keys registered and, for some reason, a key in the middle of the way is evicted, getHistory will not yields the keys older than it.
+Although we don't explicit control it, this implementation assumes that older keys expire first, so, be aware that, if you have N keys registered and, for some reason, a key in the middle of the way is evicted, getHistory will not yield the keys older than it.
 Also be aware of the memory of your instance, as this implementation tends to consume much more than the simple one. We recommend you to practice low ttl when using it.
 
 To use it:
@@ -73,6 +73,10 @@ const storage = new TreeKeyCacheTimedRoundRobinRedisStorage({
   }],
   childrenDb: 16,
   childrenRegistry: true, // optional
+  // Db timed round trip will use this as the base date for db change
+	baseTimestamp: new Date('2023-10-01T00:00:00Z').getTime(),
+  // How many days does it take to change db, ie, every db will be the main one for 7 days
+	dayScale: 7,
 })
 ```
 
