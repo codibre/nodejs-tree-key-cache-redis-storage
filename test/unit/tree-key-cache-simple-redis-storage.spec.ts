@@ -47,4 +47,22 @@ describe(TreeKeyCacheSimpleRedisStorage.name, () => {
 			expect(result).toEqual('my value');
 		});
 	});
+
+	describe(proto.set.name, () => {
+		beforeEach(() => {
+			jest.spyOn(targetBuffer['redisData'], 'set');
+			jest.spyOn(targetBuffer['redisData'], 'setex');
+		});
+
+		it('should set the value with no ttl when ttl is not informed and there is no defaultTtl', async () => {
+			const result = await targetBuffer.set('my key', Buffer.from('my value'));
+
+			expect(result).toBeUndefined();
+			expect(targetBuffer['redisData'].set).toHaveCallsLike([
+				'my key',
+				Buffer.from('my value'),
+			]);
+			expect(targetBuffer['redisData'].setex).toHaveCallsLike();
+		});
+	});
 });

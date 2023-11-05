@@ -8,6 +8,7 @@ export interface TreeKeyCacheSimpleRedisStorageNonRequiredOptions<
 	bufferMode: BufferMode;
 	childrenDb: number;
 	childrenRegistry: boolean;
+	defaultTtl: number;
 }
 
 export interface TreeKeyCacheSimpleRedisStorageOptions<
@@ -25,6 +26,7 @@ export const simpleDefaultOptions: TreeKeyCacheSimpleRedisStorageNonRequiredOpti
 		childrenDb: 16,
 		port: 6379,
 		childrenRegistry: false,
+		defaultTtl: 0,
 	};
 
 /**
@@ -40,6 +42,7 @@ export class TreeKeyCacheSimpleRedisStorage<
 	protected redisChildren: Redis;
 	protected redisData: Redis;
 	protected childrenRegistry: boolean;
+	protected defaultTtl: number | undefined;
 
 	constructor(options: TreeKeyCacheSimpleRedisStorageOptions<BufferMode>) {
 		super();
@@ -59,6 +62,7 @@ export class TreeKeyCacheSimpleRedisStorage<
 			db: options.treeDb,
 		});
 		this.childrenRegistry = this.options.childrenRegistry;
+		this.defaultTtl = this.options.defaultTtl;
 	}
 
 	protected getChildrenKey(key: string | undefined) {

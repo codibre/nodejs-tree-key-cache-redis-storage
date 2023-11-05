@@ -34,6 +34,7 @@ export class TreeKeyCacheInsertOnlyRedisStorage<
 	protected redisChildren: Redis;
 	protected redisData: Redis;
 	protected childrenRegistry: boolean;
+	protected defaultTtl: number | undefined;
 
 	constructor(
 		options: TreeKeyCacheInsertOnlyRedisStorageOptions<BufferMode> & {

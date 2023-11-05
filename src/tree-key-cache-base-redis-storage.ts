@@ -11,6 +11,7 @@ export abstract class TreeKeyCacheBaseRedisStorage<BufferMode extends boolean>
 	protected abstract redisChildren: Redis;
 	protected abstract redisData: Redis;
 	protected abstract childrenRegistry: boolean;
+	protected abstract defaultTtl: number | undefined;
 
 	async clearAllChildrenRegistry(): Promise<void> {
 		await this.redisChildren.flushdb();
@@ -46,6 +47,7 @@ export abstract class TreeKeyCacheBaseRedisStorage<BufferMode extends boolean>
 		key: string,
 		value: string | Buffer,
 	) {
+		ttl ??= this.defaultTtl;
 		await (ttl ? redis.setex(key, ttl, value) : redis.set(key, value));
 	}
 

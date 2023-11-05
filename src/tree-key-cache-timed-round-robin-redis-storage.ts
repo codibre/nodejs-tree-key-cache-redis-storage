@@ -43,6 +43,7 @@ export class TreeKeyCacheTimedRoundRobinRedisStorage<
 	protected redisChildren: Redis;
 	private redisPool: Redis[];
 	protected childrenRegistry: boolean;
+	protected defaultTtl: number | undefined;
 
 	constructor(
 		options: TreeKeyCacheTimedRoundRobinRedisStorageOptions<BufferMode> & {
@@ -76,6 +77,7 @@ export class TreeKeyCacheTimedRoundRobinRedisStorage<
 			)
 			.toArray();
 		this.childrenRegistry = this.options.childrenRegistry;
+		this.defaultTtl = this.options.defaultTtl;
 	}
 
 	private getCurrentDb() {
