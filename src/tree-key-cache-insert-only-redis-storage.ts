@@ -7,8 +7,11 @@ import {
 	simpleDefaultOptions,
 } from './tree-key-cache-simple-redis-storage';
 
-export interface TreeKeyCacheInsertOnlyRedisStorageOptions
-	extends Partial<TreeKeyCacheSimpleRedisStorageNonRequiredOptions> {
+export interface TreeKeyCacheInsertOnlyRedisStorageOptions<
+	BufferMode extends boolean,
+> extends Partial<
+		TreeKeyCacheSimpleRedisStorageNonRequiredOptions<BufferMode>
+	> {
 	host: string;
 	treeDb: number;
 }
@@ -24,20 +27,24 @@ export interface TreeKeyCacheInsertOnlyRedisStorageOptions
 export class TreeKeyCacheInsertOnlyRedisStorage<
 	BufferMode extends boolean = true,
 > extends TreeKeyCacheBaseRedisStorage<BufferMode> {
-	private options: Required<TreeKeyCacheInsertOnlyRedisStorageOptions>;
+	private options: Required<
+		TreeKeyCacheInsertOnlyRedisStorageOptions<BufferMode>
+	>;
 	protected redisGet: BufferMode extends true ? 'getBuffer' : 'get';
 	protected redisChildren: Redis;
 	protected redisData: Redis;
 	protected childrenRegistry: boolean;
 
 	constructor(
-		options: TreeKeyCacheInsertOnlyRedisStorageOptions & {
+		options: TreeKeyCacheInsertOnlyRedisStorageOptions<BufferMode> & {
 			bufferMode?: BufferMode;
 		},
 	) {
 		super();
 		this.options = {
-			...simpleDefaultOptions,
+			...(simpleDefaultOptions as Required<
+				TreeKeyCacheInsertOnlyRedisStorageOptions<BufferMode>
+			>),
 			...options,
 		};
 		this.redisGet = (

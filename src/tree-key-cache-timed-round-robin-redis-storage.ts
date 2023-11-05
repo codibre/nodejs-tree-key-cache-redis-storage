@@ -8,21 +8,25 @@ import {
 	simpleDefaultOptions,
 } from './tree-key-cache-simple-redis-storage';
 
-export interface TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions
-	extends TreeKeyCacheSimpleRedisStorageNonRequiredOptions {
+export interface TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions<
+	BufferMode extends boolean,
+> extends TreeKeyCacheSimpleRedisStorageNonRequiredOptions<BufferMode> {
 	baseTimestamp: number;
 	dayScale: number;
 }
 
-export interface TreeKeyCacheTimedRoundRobinRedisStorageOptions
-	extends Partial<TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions> {
+export interface TreeKeyCacheTimedRoundRobinRedisStorageOptions<
+	BufferMode extends boolean,
+> extends Partial<
+		TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions<BufferMode>
+	> {
 	host: string;
 	treeDbPool: (number | { host: string; dbs: number[] })[];
 }
 
 const DAY_SCALE = 86400;
 const today = Date.now() - performance.now();
-const defaultOptions: TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions =
+const defaultOptions: TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions<true> =
 	{
 		...simpleDefaultOptions,
 		baseTimestamp: 0,
@@ -32,20 +36,24 @@ const defaultOptions: TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions 
 export class TreeKeyCacheTimedRoundRobinRedisStorage<
 	BufferMode extends boolean = true,
 > extends TreeKeyCacheBaseRedisStorage<BufferMode> {
-	private options: Required<TreeKeyCacheTimedRoundRobinRedisStorageOptions>;
+	private options: Required<
+		TreeKeyCacheTimedRoundRobinRedisStorageOptions<BufferMode>
+	>;
 	protected redisGet: BufferMode extends true ? 'getBuffer' : 'get';
 	protected redisChildren: Redis;
 	private redisPool: Redis[];
 	protected childrenRegistry: boolean;
 
 	constructor(
-		options: TreeKeyCacheTimedRoundRobinRedisStorageOptions & {
+		options: TreeKeyCacheTimedRoundRobinRedisStorageOptions<BufferMode> & {
 			bufferMode?: BufferMode;
 		},
 	) {
 		super();
 		this.options = {
-			...defaultOptions,
+			...(defaultOptions as Required<
+				TreeKeyCacheTimedRoundRobinRedisStorageOptions<BufferMode>
+			>),
 			...options,
 		};
 		this.redisGet = (

@@ -1,20 +1,25 @@
 import IORedis, { Redis } from 'ioredis';
 import { TreeKeyCacheBaseRedisStorage } from './tree-key-cache-base-redis-storage';
 
-export interface TreeKeyCacheSimpleRedisStorageNonRequiredOptions {
+export interface TreeKeyCacheSimpleRedisStorageNonRequiredOptions<
+	BufferMode extends boolean,
+> {
 	port: number;
-	bufferMode: boolean;
+	bufferMode: BufferMode;
 	childrenDb: number;
 	childrenRegistry: boolean;
 }
 
-export interface TreeKeyCacheSimpleRedisStorageOptions
-	extends Partial<TreeKeyCacheSimpleRedisStorageNonRequiredOptions> {
+export interface TreeKeyCacheSimpleRedisStorageOptions<
+	BufferMode extends boolean,
+> extends Partial<
+		TreeKeyCacheSimpleRedisStorageNonRequiredOptions<BufferMode>
+	> {
 	host: string;
 	treeDb: number;
 }
 
-export const simpleDefaultOptions: TreeKeyCacheSimpleRedisStorageNonRequiredOptions =
+export const simpleDefaultOptions: TreeKeyCacheSimpleRedisStorageNonRequiredOptions<true> =
 	{
 		bufferMode: true,
 		childrenDb: 16,
@@ -30,20 +35,18 @@ export const simpleDefaultOptions: TreeKeyCacheSimpleRedisStorageNonRequiredOpti
 export class TreeKeyCacheSimpleRedisStorage<
 	BufferMode extends boolean = true,
 > extends TreeKeyCacheBaseRedisStorage<BufferMode> {
-	private options: Required<TreeKeyCacheSimpleRedisStorageOptions>;
+	private options: Required<TreeKeyCacheSimpleRedisStorageOptions<BufferMode>>;
 	protected redisGet: BufferMode extends true ? 'getBuffer' : 'get';
 	protected redisChildren: Redis;
 	protected redisData: Redis;
 	protected childrenRegistry: boolean;
 
-	constructor(
-		options: TreeKeyCacheSimpleRedisStorageOptions & {
-			bufferMode?: BufferMode;
-		},
-	) {
+	constructor(options: TreeKeyCacheSimpleRedisStorageOptions<BufferMode>) {
 		super();
 		this.options = {
-			...simpleDefaultOptions,
+			...(simpleDefaultOptions as Required<
+				TreeKeyCacheSimpleRedisStorageOptions<BufferMode>
+			>),
 			...options,
 		};
 		this.redisGet = (
