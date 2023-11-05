@@ -1,6 +1,6 @@
 import { KeyTreeCacheStorage } from 'tree-key-cache';
 import { Redis } from 'ioredis';
-import { RedisStorageValueType } from './redis-storage-value-type';
+import { RedisStorageValueType } from './types';
 import { depaginate } from '@codibre/fluent-iterable';
 
 const COUNT_CHILDREN = 1000;

@@ -74,9 +74,9 @@ const storage = new TreeKeyCacheTimedRoundRobinRedisStorage({
   childrenDb: 16,
   childrenRegistry: true, // optional
   // Db timed round trip will use this as the base date for db change
-	baseTimestamp: new Date('2023-10-01T00:00:00Z').getTime(),
+  baseTimestamp: new Date('2023-10-01T00:00:00Z').getTime(),
   // How many days does it take to change db, ie, every db will be the main one for 7 days
-	dayScale: 7,
+  dayScale: 7,
 })
 ```
 

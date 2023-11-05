@@ -1,7 +1,7 @@
 import IORedis, { Redis } from 'ioredis';
 import { TreeKeyCacheBaseRedisStorage } from './tree-key-cache-base-redis-storage';
 import { getBufferedInt, readBufferedInt, suffixString } from './utils';
-import { RedisStorageValueType } from './redis-storage-value-type';
+import { RedisStorageValueType } from './types';
 import {
 	TreeKeyCacheSimpleRedisStorageNonRequiredOptions,
 	simpleDefaultOptions,

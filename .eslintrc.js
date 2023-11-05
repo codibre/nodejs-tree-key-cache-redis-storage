@@ -34,6 +34,7 @@ module.exports = {
 		'templates/**',
 		'*.py',
 		'.eslintrc.js',
+		'docs',
 	],
 	parser: '@typescript-eslint/parser',
 	parserOptions: {
