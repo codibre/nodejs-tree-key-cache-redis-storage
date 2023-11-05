@@ -1,3 +1,10 @@
+## [0.1.1](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/compare/v0.1.0...v0.1.1) (2023-11-05)
+
+
+### Bug Fixes
+
+* fixing readme examples ([71999f6](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/commit/71999f64d594a92bd4a418c8f0b9f4b98e9dd42a))
+
 # [0.1.0](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/compare/v0.0.0...v0.1.0) (2023-11-05)
 
 
