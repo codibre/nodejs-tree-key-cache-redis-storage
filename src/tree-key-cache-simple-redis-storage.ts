@@ -47,7 +47,7 @@ export class TreeKeyCacheSimpleRedisStorage<
 			...options,
 		};
 		this.redisGet = (
-			options.bufferMode ? 'getBuffer' : 'get'
+			this.options.bufferMode ? 'getBuffer' : 'get'
 		) as typeof this.redisGet;
 		this.redisChildren = new IORedis(this.options.port, options.host, {
 			db: options.childrenDb,
