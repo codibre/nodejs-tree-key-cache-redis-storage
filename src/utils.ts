@@ -50,19 +50,19 @@ export function isBaseKey(key: string) {
 }
 
 export function getBufferedInt(version: number) {
-	let bufferedVersion = Buffer.allocUnsafe(INT_SIZE);
+	let bufferedVersion = Buffer.alloc(INT_SIZE);
 	bufferedVersion.writeInt32LE(version);
 	let firstRightZero = INT_SIZE - 1;
-	while (!bufferedVersion[firstRightZero] && firstRightZero > 0) {
+	while (!bufferedVersion[firstRightZero] && firstRightZero >= 0) {
 		firstRightZero--;
 	}
-	bufferedVersion = bufferedVersion.slice(0, firstRightZero);
+	bufferedVersion = bufferedVersion.slice(0, firstRightZero + 1);
 	return bufferedVersion;
 }
 
 export function readBufferedInt(value: Buffer | null | undefined) {
 	if (!value) return 0;
-	const buffer = Buffer.allocUnsafe(INT_SIZE);
+	const buffer = Buffer.alloc(INT_SIZE);
 	value.copy(buffer);
 	return buffer.readInt32LE(0);
 }

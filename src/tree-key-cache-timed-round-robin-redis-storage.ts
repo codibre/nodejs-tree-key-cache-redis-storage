@@ -1,48 +1,41 @@
 import { performance } from 'perf_hooks';
 import IORedis, { Redis } from 'ioredis';
-import { TreeKeyCacheBaseRedisStorage } from './tree-key-cache-base-redis-storage';
+import {
+	TreeKeyCacheBaseRedisStorage,
+	TreeKeyCacheBaseRedisStorageOptions,
+} from './tree-key-cache-base-redis-storage';
 import { applyScape, isBaseKey } from './utils';
 import { fluent, fluentAsync } from '@codibre/fluent-iterable';
-import {
-	TreeKeyCacheSimpleRedisStorageNonRequiredOptions,
-	simpleDefaultOptions,
-} from './tree-key-cache-simple-redis-storage';
+import { RedisDbPool } from './types';
 
-export interface TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions<
-	BufferMode extends boolean,
-> extends TreeKeyCacheSimpleRedisStorageNonRequiredOptions<BufferMode> {
+export interface TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions {
 	baseTimestamp: number;
 	dayScale: number;
 }
 
 export interface TreeKeyCacheTimedRoundRobinRedisStorageOptions<
 	BufferMode extends boolean,
-> extends Partial<
-		TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions<BufferMode>
-	> {
+> extends TreeKeyCacheBaseRedisStorageOptions<BufferMode>,
+		Partial<TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions> {
 	host: string;
-	treeDbPool: (number | { host: string; dbs: number[] })[];
+	treeDbPool: (number | RedisDbPool)[];
 }
 
 const DAY_SCALE = 86400;
 const today = Date.now() - performance.now();
-const defaultOptions: TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions<true> =
+const defaultOptions: TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions =
 	{
-		...simpleDefaultOptions,
 		baseTimestamp: 0,
 		dayScale: 1,
 	};
 
 export class TreeKeyCacheTimedRoundRobinRedisStorage<
 	BufferMode extends boolean = true,
-> extends TreeKeyCacheBaseRedisStorage<BufferMode> {
-	private options: Required<
-		TreeKeyCacheTimedRoundRobinRedisStorageOptions<BufferMode>
-	>;
-	protected redisGet: BufferMode extends true ? 'getBuffer' : 'get';
-	protected redisChildren: Redis;
+> extends TreeKeyCacheBaseRedisStorage<
+	BufferMode,
+	Required<TreeKeyCacheTimedRoundRobinRedisStorageOptions<BufferMode>>
+> {
 	private redisPool: Redis[];
-	protected childrenRegistry: boolean;
 	protected defaultTtl: number | undefined;
 
 	constructor(
@@ -50,24 +43,21 @@ export class TreeKeyCacheTimedRoundRobinRedisStorage<
 			bufferMode?: BufferMode;
 		},
 	) {
-		super();
-		this.options = {
+		super({
 			...(defaultOptions as Required<
 				TreeKeyCacheTimedRoundRobinRedisStorageOptions<BufferMode>
 			>),
 			...options,
-		};
-		this.redisGet = (
-			this.options.bufferMode ? 'getBuffer' : 'get'
-		) as typeof this.redisGet;
-		this.redisChildren = new IORedis(this.options.port, options.host, {
-			db: options.childrenDb,
 		});
 		this.redisPool = fluent(options.treeDbPool)
 			.flatMap((item) =>
 				typeof item === 'number'
-					? [{ host: options.host, db: item }]
-					: fluent(item.dbs).map((db) => ({ host: item.host, db })),
+					? [{ host: options.host, port: options.port, db: item }]
+					: fluent(item.dbs).map((db) => ({
+							host: item.host,
+							port: item.port,
+							db,
+					  })),
 			)
 			.map(
 				({ host, db }) =>
@@ -76,8 +66,6 @@ export class TreeKeyCacheTimedRoundRobinRedisStorage<
 					}),
 			)
 			.toArray();
-		this.childrenRegistry = this.options.childrenRegistry;
-		this.defaultTtl = this.options.defaultTtl;
 	}
 
 	private getCurrentDb() {
@@ -93,10 +81,6 @@ export class TreeKeyCacheTimedRoundRobinRedisStorage<
 			throw new Error('Invalid redis index!');
 		}
 		return redis;
-	}
-
-	protected getChildrenKey(key: string | undefined) {
-		return key ?? '';
 	}
 
 	async *getHistory(key: string) {

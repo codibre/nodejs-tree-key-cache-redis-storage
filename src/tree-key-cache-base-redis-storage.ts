@@ -1,17 +1,52 @@
 import { KeyTreeCacheStorage } from 'tree-key-cache';
-import { Redis } from 'ioredis';
-import { RedisStorageValueType } from './types';
+import IORedis, { Redis } from 'ioredis';
+import { RedisConnection, RedisStorageValueType } from './types';
 import { depaginate } from '@codibre/fluent-iterable';
 
+export interface TreeKeyCacheBaseRedisStorageNonRequiredOptions {
+	port: number;
+	childrenDb: number;
+	childrenRegistry: boolean;
+	defaultTtl: number;
+}
+
+export interface TreeKeyCacheBaseRedisStorageOptions<BufferMode extends boolean>
+	extends Partial<TreeKeyCacheBaseRedisStorageNonRequiredOptions>,
+		RedisConnection {
+	bufferMode: BufferMode;
+}
+
 const COUNT_CHILDREN = 1000;
-export abstract class TreeKeyCacheBaseRedisStorage<BufferMode extends boolean>
-	implements KeyTreeCacheStorage<RedisStorageValueType<BufferMode>>
+const baseDefaultOptions: TreeKeyCacheBaseRedisStorageNonRequiredOptions = {
+	childrenDb: 16,
+	port: 6379,
+	childrenRegistry: false,
+	defaultTtl: 0,
+};
+
+export abstract class TreeKeyCacheBaseRedisStorage<
+	BufferMode extends boolean,
+	Options extends TreeKeyCacheBaseRedisStorageOptions<BufferMode>,
+> implements KeyTreeCacheStorage<RedisStorageValueType<BufferMode>>
 {
-	protected abstract redisGet: BufferMode extends true ? 'getBuffer' : 'get';
-	protected abstract redisChildren: Redis;
+	private redisGet: BufferMode extends true ? 'getBuffer' : 'get';
+	private redisChildren: Redis;
 	protected abstract redisData: Redis;
-	protected abstract childrenRegistry: boolean;
-	protected abstract defaultTtl: number | undefined;
+	protected options: Required<Options> &
+		Required<TreeKeyCacheBaseRedisStorageNonRequiredOptions>;
+
+	constructor(options: Options) {
+		this.options = {
+			...(baseDefaultOptions as Required<TreeKeyCacheBaseRedisStorageNonRequiredOptions>),
+			...(options as Required<Options>),
+		};
+		this.redisGet = (
+			this.options.bufferMode ? 'getBuffer' : 'get'
+		) as typeof this.redisGet;
+		this.redisChildren = new IORedis(this.options.port, options.host, {
+			db: options.childrenDb,
+		});
+	}
 
 	async clearAllChildrenRegistry(): Promise<void> {
 		await this.redisChildren.flushdb();
@@ -47,14 +82,16 @@ export abstract class TreeKeyCacheBaseRedisStorage<BufferMode extends boolean>
 		key: string,
 		value: string | Buffer,
 	) {
-		ttl ??= this.defaultTtl;
+		ttl ??= this.options.defaultTtl;
 		await (ttl ? redis.setex(key, ttl, value) : redis.set(key, value));
 	}
 
-	protected abstract getChildrenKey(key: string | undefined): string;
+	protected getChildrenKey(key: string | undefined) {
+		return key ?? '';
+	}
 
 	async *getChildren(key?: string | undefined): AsyncIterable<string> {
-		if (!this.childrenRegistry) {
+		if (!this.options.childrenRegistry) {
 			throw new TypeError('getChildren not supported!');
 		}
 		const childrenKey = this.getChildrenKey(key);
@@ -98,7 +135,7 @@ export abstract class TreeKeyCacheBaseRedisStorage<BufferMode extends boolean>
 	}
 
 	async registerChild(parentKey: string | undefined, partialKey: string) {
-		if (this.childrenRegistry) {
+		if (this.options.childrenRegistry) {
 			const redis = this.redisData;
 			const childrenKey = this.getChildrenKey(parentKey);
 

@@ -10,7 +10,10 @@
       "request": "launch",
       "name": "Tests",
       "skipFiles": [
-        "<node_internals>/**"
+        "<node_internals>/**",
+        "${workspaceRoot}/node_modules/extension-methods/**",
+        "${workspaceRoot}/node_modules/**/fluent-iterable/**",
+        "${workspaceRoot}/node_modules/**/augmentative-iterable/**"
       ],
       "cwd": "${workspaceRoot}",
       "runtimeExecutable": "${env:NVM_DIR}/nvm-exec",
