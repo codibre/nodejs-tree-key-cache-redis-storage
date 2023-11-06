@@ -42,7 +42,7 @@ const storage = new TreeKeyCacheSimpleRedisStorage({
 })
 ```
 
-## Insert Only Redis Storage
+### Insert Only Redis Storage
 
 This is a key history enabled implementation, ideal if you need to keep every registered value for a key separated. Aside from all the functionalities that **TreeKeyCacheSimpleRedisStorage** delivers, it also implement **getHistory**, which will return every single non expired value of the given key, from the latest to the oldest.
 Although we don't explicit control it, this implementation assumes that older keys expire first, so, be aware that, if you have N keys registered and, for some reason, a key in the middle of the way is evicted, getHistory will not yield the keys older than it.
@@ -58,7 +58,7 @@ const storage = new TreeKeyCacheSimpleRedisStorage({
 })
 ```
 
-## Timed round robin Redis Storage
+### Timed round robin Redis Storage
 
 This is a key history enabled implementation that is in the middle of the way between the insertOnly and the simple one. With this one, you can have a redis db pool to control key history. Based on a measure of day, a redis db is set as the current one, making all the new persistence being written in it. This will make older versions of each key to be stored in the other redis versions, making it possible to recover the history, also ordered from the latest to the oldest.
 The redis db pool can use dbs from the same main host, or even from totally separated redis instances! The only drawback is that, if you want children registry, this will be controlled in a single redis db instance: the main one.
