@@ -2,20 +2,9 @@
   "hideGenerator": true,
   "theme": "default",
   "out": "docs",
-  "readme": "none",
-  "name": "fluent-iterable",
+  "readme": "README.md",
+  "name": "@tree-key-cache/redis-storage",
   "includeVersion": true,
   "disableSources": true,
-  "entryPoints": ["src/index.ts"],
-  "exclude": [
-    "src/fluentFunctions.ts",
-    "src/fluentAsyncFunctions.ts",
-    "src/sync/**",
-    "src/async/**",
-    "src/recipes/**",
-    "src/types-internal/**",
-    "src/helpers/**",
-    "src/mounters/**",
-    "index.ts"
-  ]
+  "entryPoints": ["src/index.ts"]
 }

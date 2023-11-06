@@ -1,15 +1,15 @@
 const Redis = require('ioredis-mock');
 jest.mock('ioredis', () => Redis);
 import { TreeKeyCacheBaseRedisStorage } from 'src/tree-key-cache-base-redis-storage';
-import { TreeKeyCacheSimpleRedisStorage } from 'src/index';
+import { TreeKeyCacheTimedRoundRobinRedisStorage } from 'src/index';
 
-describe(TreeKeyCacheSimpleRedisStorage.name, () => {
-	let target: TreeKeyCacheSimpleRedisStorage<false>;
+describe(TreeKeyCacheTimedRoundRobinRedisStorage.name, () => {
+	let target: TreeKeyCacheTimedRoundRobinRedisStorage<false>;
 
 	beforeEach(() => {
-		target = new TreeKeyCacheSimpleRedisStorage({
+		target = new TreeKeyCacheTimedRoundRobinRedisStorage({
 			host: 'my host',
-			treeDb: 1,
+			treeDbPool: [1, 2, 3],
 			bufferMode: false,
 		});
 	});

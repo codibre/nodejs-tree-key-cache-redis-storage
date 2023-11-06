@@ -1,20 +1,7 @@
-import IORedis, { Redis } from 'ioredis';
-import { TreeKeyCacheBaseRedisStorage } from './tree-key-cache-base-redis-storage';
-import { getBufferedInt, readBufferedInt, suffixString } from './utils';
+import { suffixString } from './utils';
 import { RedisStorageValueType } from './types';
-import {
-	TreeKeyCacheSimpleRedisStorageNonRequiredOptions,
-	simpleDefaultOptions,
-} from './tree-key-cache-simple-redis-storage';
-
-export interface TreeKeyCacheInsertOnlyRedisStorageOptions<
-	BufferMode extends boolean,
-> extends Partial<
-		TreeKeyCacheSimpleRedisStorageNonRequiredOptions<BufferMode>
-	> {
-	host: string;
-	treeDb: number;
-}
+import { TreeKeyCacheSimpleRedisStorage } from './tree-key-cache-simple-redis-storage';
+import { fluentForAsync } from '@codibre/fluent-iterable';
 
 /**
  * A key history enabled TreeKeyCacheStorage implementation
@@ -26,61 +13,32 @@ export interface TreeKeyCacheInsertOnlyRedisStorageOptions<
  */
 export class TreeKeyCacheInsertOnlyRedisStorage<
 	BufferMode extends boolean = true,
-> extends TreeKeyCacheBaseRedisStorage<BufferMode> {
-	private options: Required<
-		TreeKeyCacheInsertOnlyRedisStorageOptions<BufferMode>
-	>;
-	protected redisGet: BufferMode extends true ? 'getBuffer' : 'get';
-	protected redisChildren: Redis;
-	protected redisData: Redis;
-	protected childrenRegistry: boolean;
-
-	constructor(
-		options: TreeKeyCacheInsertOnlyRedisStorageOptions<BufferMode> & {
-			bufferMode?: BufferMode;
-		},
-	) {
-		super();
-		this.options = {
-			...(simpleDefaultOptions as Required<
-				TreeKeyCacheInsertOnlyRedisStorageOptions<BufferMode>
-			>),
-			...options,
-		};
-		this.redisGet = (
-			this.options.bufferMode ? 'getBuffer' : 'get'
-		) as typeof this.redisGet;
-		this.redisChildren = new IORedis(this.options.port, options.host, {
-			db: options.childrenDb,
-		});
-		this.redisData = new IORedis(this.options.port, options.host, {
-			db: options.treeDb,
-		});
-		this.childrenRegistry = this.options.childrenRegistry;
-	}
-
-	protected getChildrenKey(key: string | undefined) {
-		return key ?? '';
-	}
-
-	async get() {
+> extends TreeKeyCacheSimpleRedisStorage<BufferMode> {
+	async get(_key: string) {
 		return undefined;
 	}
 
-	private async getLastVersion(key: string) {
-		return readBufferedInt(await this.redisData.getBuffer(key));
+	private async getLatestVersion(key: string) {
+		return Number((await this.redisData.get(key)) ?? 0);
 	}
 
-	async *getHistory(key: string) {
-		let version = await this.getLastVersion(key);
-		while (version > 0) {
-			const item = await this.internalGet(suffixString(key, version));
-			if (item === undefined) {
-				break;
-			}
-			yield item;
-			version--;
+	private async getNextVersion(key: string) {
+		try {
+			return await this.redisData.incr(key);
+		} catch {
+			await this.redisData.del(key);
+			return this.redisData.incr(key);
 		}
+	}
+
+	getHistory(key: string) {
+		return fluentForAsync(
+			this.getLatestVersion(key),
+			(x) => x > 0,
+			(x) => x - 1,
+		)
+			.map((version) => this.internalGet(suffixString(key, version)))
+			.takeWhile((value) => value !== undefined);
 	}
 
 	async set(
@@ -88,14 +46,7 @@ export class TreeKeyCacheInsertOnlyRedisStorage<
 		value: RedisStorageValueType<BufferMode>,
 		ttl?: number | undefined,
 	): Promise<void> {
-		const version = (await this.getLastVersion(key)) + 1;
-		await Promise.all([
-			super.set(suffixString(key, version), value, ttl),
-			super.set(
-				key,
-				getBufferedInt(version) as RedisStorageValueType<BufferMode>,
-				ttl,
-			),
-		]);
+		const version = await this.getNextVersion(key);
+		await super.set(suffixString(key, version), value, ttl);
 	}
 }
