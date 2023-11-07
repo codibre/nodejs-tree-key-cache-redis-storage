@@ -24,7 +24,11 @@ export class TreeKeyCacheInsertOnlyRedisStorage<
 
 	private async getNextVersion(key: string) {
 		try {
-			return await this.redisData.incr(key);
+			const result = await this.redisData.incr(key);
+			if (Number.isNaN(result)) {
+				throw new TypeError('Not a number');
+			}
+			return result;
 		} catch {
 			await this.redisData.del(key);
 			return this.redisData.incr(key);
