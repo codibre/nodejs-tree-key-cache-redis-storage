@@ -218,9 +218,9 @@ describe(TreeKeyCacheBaseRedisStorage.name, () => {
 
 	describe(proto.randomIterate.name, () => {
 		it('should return all the registered keys when no parameters is passed', async () => {
-			await targetString['redisChildren'].set('my key 1', 'a1');
-			await targetString['redisChildren'].set('my key item 2', 'b1');
-			await targetString['redisChildren'].set('my key item 3', 'c1');
+			await targetString.set('my key 1', 'a1');
+			await targetString.set('my key item 2', 'b1');
+			await targetString.set('my key item 3', 'c1');
 
 			const result = await fluentAsync(targetString.randomIterate()).toArray();
 
@@ -228,9 +228,9 @@ describe(TreeKeyCacheBaseRedisStorage.name, () => {
 		});
 
 		it('should return all the matching registered keys when a parameters is passed', async () => {
-			await targetString['redisChildren'].set('my key 1', 'a1');
-			await targetString['redisChildren'].set('my key item 2', 'b1');
-			await targetString['redisChildren'].set('my key item 3', 'c1');
+			await targetString.set('my key 1', 'a1');
+			await targetString.set('my key item 2', 'b1');
+			await targetString.set('my key item 3', 'c1');
 
 			const result = await fluentAsync(
 				targetString.randomIterate('*item*'),

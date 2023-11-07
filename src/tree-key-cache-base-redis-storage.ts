@@ -18,12 +18,13 @@ export interface TreeKeyCacheBaseRedisStorageOptions<BufferMode extends boolean>
 }
 
 const COUNT_CHILDREN = 1000;
-const baseDefaultOptions: TreeKeyCacheBaseRedisStorageNonRequiredOptions = {
-	childrenDb: 16,
-	port: 6379,
-	childrenRegistry: false,
-	defaultTtl: 0,
-};
+export const baseDefaultOptions: TreeKeyCacheBaseRedisStorageNonRequiredOptions =
+	{
+		childrenDb: 16,
+		port: 6379,
+		childrenRegistry: false,
+		defaultTtl: 0,
+	};
 
 export abstract class TreeKeyCacheBaseRedisStorage<
 	BufferMode extends boolean,
@@ -116,15 +117,9 @@ export abstract class TreeKeyCacheBaseRedisStorage<
 	randomIterate(pattern?: string | undefined): AsyncIterable<string> {
 		const getNext = pattern
 			? (cursor: string | number = 0) =>
-					this.redisChildren.scan(
-						cursor,
-						'MATCH',
-						pattern,
-						'COUNT',
-						COUNT_CHILDREN,
-					)
+					this.redisData.scan(cursor, 'MATCH', pattern, 'COUNT', COUNT_CHILDREN)
 			: (cursor: string | number = 0) =>
-					this.redisChildren.scan(cursor, 'COUNT', COUNT_CHILDREN);
+					this.redisData.scan(cursor, 'COUNT', COUNT_CHILDREN);
 		return depaginate(async (token: string | number | undefined) =>
 			getPageToken(await getNext(token)),
 		);

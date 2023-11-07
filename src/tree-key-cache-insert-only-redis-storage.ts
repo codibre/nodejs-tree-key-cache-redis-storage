@@ -1,7 +1,8 @@
-import { suffixString } from './utils';
+import { applyEscape, removeEscape } from './utils';
 import { RedisStorageValueType } from './types';
 import { TreeKeyCacheSimpleRedisStorage } from './tree-key-cache-simple-redis-storage';
-import { fluentForAsync } from '@codibre/fluent-iterable';
+import { fluentAsync, fluentForAsync } from '@codibre/fluent-iterable';
+import { addSuffix } from './utils';
 
 /**
  * A key history enabled TreeKeyCacheStorage implementation
@@ -36,12 +37,13 @@ export class TreeKeyCacheInsertOnlyRedisStorage<
 	}
 
 	getHistory(key: string) {
+		const treatedKey = applyEscape(key);
 		return fluentForAsync(
-			this.getLatestVersion(key),
+			this.getLatestVersion(treatedKey),
 			(x) => x > 0,
 			(x) => x - 1,
 		)
-			.map((version) => this.internalGet(suffixString(key, version)))
+			.map((version) => this.internalGet(addSuffix(treatedKey, version)))
 			.takeWhile((value) => value !== undefined);
 	}
 
@@ -50,7 +52,14 @@ export class TreeKeyCacheInsertOnlyRedisStorage<
 		value: RedisStorageValueType<BufferMode>,
 		ttl?: number | undefined,
 	): Promise<void> {
-		const version = await this.getNextVersion(key);
-		await super.set(suffixString(key, version), value, ttl);
+		const treatedKey = applyEscape(key);
+		const version = await this.getNextVersion(treatedKey);
+		await super.set(addSuffix(treatedKey, version), value, ttl);
+	}
+
+	randomIterate(pattern?: string | undefined) {
+		return fluentAsync(super.randomIterate(pattern))
+			.filter((x) => !x.includes('_'))
+			.map(removeEscape);
 	}
 }
