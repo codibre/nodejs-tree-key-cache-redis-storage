@@ -90,27 +90,29 @@ export abstract class TreeKeyCacheBaseRedisStorage<
 		return key ?? '';
 	}
 
-	async *getChildren(key?: string | undefined): AsyncIterable<string> {
+	getChildren(key?: string | undefined): AsyncIterable<string> {
 		if (!this.options.childrenRegistry) {
-			throw new TypeError('getChildren not supported!');
+			throw new Error('getChildren not supported!');
 		}
 		const childrenKey = this.getChildrenKey(key);
 		return depaginate(async (cursor: string | number = 0) => {
-			const [nextPageToken, results] = await this.redisChildren.sscan(
+			const [strToken, results] = await this.redisChildren.sscan(
 				childrenKey,
 				cursor,
 				'COUNT',
 				COUNT_CHILDREN,
 			);
+			const nextPageToken = Number(strToken);
 			return {
-				nextPageToken,
+				nextPageToken: nextPageToken || undefined,
 				results,
 			};
 		});
 	}
 
-	getCurrentTtl(key: string): number | Promise<number | undefined> | undefined {
-		return this.redisData.ttl(key);
+	async getCurrentTtl(key: string) {
+		const result = await this.redisData.ttl(key);
+		return result < 0 ? undefined : result;
 	}
 
 	randomIterate(pattern?: string | undefined): AsyncIterable<string> {
@@ -136,7 +138,7 @@ export abstract class TreeKeyCacheBaseRedisStorage<
 
 	async registerChild(parentKey: string | undefined, partialKey: string) {
 		if (this.options.childrenRegistry) {
-			const redis = this.redisData;
+			const redis = this.redisChildren;
 			const childrenKey = this.getChildrenKey(parentKey);
 
 			await redis.sadd(childrenKey, partialKey);

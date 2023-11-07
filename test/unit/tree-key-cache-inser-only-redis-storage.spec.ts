@@ -5,7 +5,7 @@ import {
 	TreeKeyCacheInsertOnlyRedisStorage,
 	TreeKeyCacheSimpleRedisStorage,
 } from 'src/index';
-import { suffixString } from 'src/utils';
+import { encodeInt, suffixString } from 'src/utils';
 
 const proto = TreeKeyCacheInsertOnlyRedisStorage.prototype;
 
@@ -73,6 +73,18 @@ describe(TreeKeyCacheInsertOnlyRedisStorage.name, () => {
 				'my:key\\0\\1123_!',
 				'abc',
 			]);
+		});
+
+		it('should reset counter key when it is not a number', async () => {
+			await target['redisData'].set('my key', 'abc');
+
+			const result = await target.set('my key', 'abc');
+
+			expect(result).toBeUndefined();
+			expect(target['redisData'].set).toHaveCallsLike(
+				['my key', 'abc'],
+				[`my key_${encodeInt(1)}`, 'abc'],
+			);
 		});
 	});
 
