@@ -1,12 +1,10 @@
-import { performance } from 'perf_hooks';
 import IORedis, { Redis } from 'ioredis';
 import {
 	TreeKeyCacheBaseRedisStorage,
 	TreeKeyCacheBaseRedisStorageOptions,
 	baseDefaultOptions,
 } from './tree-key-cache-base-redis-storage';
-import { applyEscape, isBaseKey } from './utils';
-import { fluent, fluentAsync } from '@codibre/fluent-iterable';
+import { fluent } from '@codibre/fluent-iterable';
 import { RedisDbPool } from './types';
 
 export interface TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions {
@@ -22,8 +20,7 @@ export interface TreeKeyCacheTimedRoundRobinRedisStorageOptions<
 	treeDbPool: (number | RedisDbPool)[];
 }
 
-const DAY_SCALE = 86400;
-const today = Date.now() - performance.now();
+const DAY_SCALE = 86400000;
 const defaultOptions: TreeKeyCacheTimedRoundRobinRedisStorageNonRequiredOptions =
 	{
 		baseTimestamp: 0,
@@ -76,37 +73,28 @@ export class TreeKeyCacheTimedRoundRobinRedisStorage<
 	}
 
 	private getCurrentDb() {
-		return Math.floor(
-			(performance.now() / DAY_SCALE + today - this.options.baseTimestamp) /
-				(DAY_SCALE * this.options.dayScale),
+		const now = Date.now();
+		return (
+			Math.floor(
+				(now - this.options.baseTimestamp) /
+					(DAY_SCALE * this.options.dayScale),
+			) % this.redisPool.length
 		);
 	}
 
 	protected get redisData(): Redis {
-		const redis = this.redisPool[this.getCurrentDb()];
-		if (!redis) {
-			throw new Error('Invalid redis index!');
-		}
-		return redis;
+		return this.redisPool[this.getCurrentDb()] as Redis;
 	}
 
 	async *getHistory(key: string) {
 		const baseDb = this.getCurrentDb();
 		const { length } = this.redisPool;
 		for (let i = length; i > 0; i--) {
-			const redis = this.redisPool[(baseDb + i) % length];
-			const result = redis
-				? await this.internalGetFromRedis(redis, key)
-				: undefined;
+			const redis = this.redisPool[(baseDb + i) % length] as Redis;
+			const result = await this.internalGetFromRedis(redis, key);
 			if (result !== undefined) {
 				yield result;
 			}
 		}
-	}
-
-	randomIterate(pattern?: string | undefined) {
-		return fluentAsync(
-			super.randomIterate(pattern ? applyEscape(pattern) : pattern),
-		).filter(isBaseKey);
 	}
 }
