@@ -1,3 +1,10 @@
+## [0.1.8](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/compare/v0.1.7...v0.1.8) (2023-11-07)
+
+
+### Bug Fixes
+
+* fixing timed round robin methods ([#6](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/issues/6)) ([332bdaa](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/commit/332bdaa176bda113ee750aaad462e0d7d1025ea2))
+
 ## [0.1.7](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/compare/v0.1.6...v0.1.7) (2023-11-07)
 
 
