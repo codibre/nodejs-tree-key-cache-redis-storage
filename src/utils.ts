@@ -66,3 +66,10 @@ export function readBufferedInt(value: Buffer | null | undefined) {
 	value.copy(buffer);
 	return buffer.readInt32LE(0);
 }
+export function getPageToken([strToken, results]: [string, string[]]) {
+	const nextPageToken = Number(strToken);
+	return {
+		nextPageToken: nextPageToken || undefined,
+		results,
+	};
+}
