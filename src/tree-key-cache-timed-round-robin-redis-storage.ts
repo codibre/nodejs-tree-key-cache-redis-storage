@@ -3,8 +3,9 @@ import IORedis, { Redis } from 'ioredis';
 import {
 	TreeKeyCacheBaseRedisStorage,
 	TreeKeyCacheBaseRedisStorageOptions,
+	baseDefaultOptions,
 } from './tree-key-cache-base-redis-storage';
-import { applyScape, isBaseKey } from './utils';
+import { applyEscape, isBaseKey } from './utils';
 import { fluent, fluentAsync } from '@codibre/fluent-iterable';
 import { RedisDbPool } from './types';
 
@@ -52,16 +53,22 @@ export class TreeKeyCacheTimedRoundRobinRedisStorage<
 		this.redisPool = fluent(options.treeDbPool)
 			.flatMap((item) =>
 				typeof item === 'number'
-					? [{ host: options.host, port: options.port, db: item }]
+					? [
+							{
+								host: options.host,
+								port: options.port ?? baseDefaultOptions.port,
+								db: item,
+							},
+					  ]
 					: fluent(item.dbs).map((db) => ({
 							host: item.host,
-							port: item.port,
+							port: item.port ?? baseDefaultOptions.port,
 							db,
 					  })),
 			)
 			.map(
-				({ host, db }) =>
-					new IORedis(this.options.port, host, {
+				({ host, db, port }) =>
+					new IORedis(port, host, {
 						db,
 					}),
 			)
@@ -99,7 +106,7 @@ export class TreeKeyCacheTimedRoundRobinRedisStorage<
 
 	randomIterate(pattern?: string | undefined) {
 		return fluentAsync(
-			super.randomIterate(pattern ? applyScape(pattern) : pattern),
+			super.randomIterate(pattern ? applyEscape(pattern) : pattern),
 		).filter(isBaseKey);
 	}
 }

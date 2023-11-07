@@ -5,7 +5,7 @@ import {
 	TreeKeyCacheInsertOnlyRedisStorage,
 	TreeKeyCacheSimpleRedisStorage,
 } from 'src/index';
-import { encodeInt, suffixString } from 'src/utils';
+import { addSuffix, encodeInt } from 'src/utils';
 
 const proto = TreeKeyCacheInsertOnlyRedisStorage.prototype;
 
@@ -58,7 +58,7 @@ describe(TreeKeyCacheInsertOnlyRedisStorage.name, () => {
 			);
 
 			const result = await interval(1, count)
-				.map((x): [string, string] => [suffixString('my key', x), x.toString()])
+				.map((x): [string, string] => [addSuffix('my key', x), x.toString()])
 				.distinct(([x]) => x)
 				.filterAsync(async ([k, v]) => (await target['redisData'].get(k)) === v)
 				.count();
@@ -141,6 +141,34 @@ describe(TreeKeyCacheInsertOnlyRedisStorage.name, () => {
 			const result = await target.getHistory(key).toArray();
 
 			expect(result).toEqual(['abc']);
+		});
+	});
+
+	describe(proto.randomIterate.name, () => {
+		it('should return only keys with no version suffix', async () => {
+			await target.set('my\\key_1', 'a1');
+			await target.set('my\\key_1', 'a2');
+			await target.set('my key item 2', 'b1');
+			await target.set('my key item 2', 'b2');
+			await target.set('my key item 3', 'c1');
+			await target.set('my key item 3', 'c2');
+
+			const result = await target.randomIterate().toArray();
+
+			expect(result).toEqual(['my\\key_1', 'my key item 2', 'my key item 3']);
+		});
+
+		it('should return only keys with no version suffix', async () => {
+			await target.set('my\\key_1', 'a1');
+			await target.set('my\\key_1', 'a2');
+			await target.set('my key\\item 2', 'b1');
+			await target.set('my key\\item 2', 'b2');
+			await target.set('my key\\item 3', 'c1');
+			await target.set('my key\\item 3', 'c2');
+
+			const result = await target.randomIterate('*item*').toArray();
+
+			expect(result).toEqual(['my key\\item 2', 'my key\\item 3']);
 		});
 	});
 });

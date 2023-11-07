@@ -37,12 +37,15 @@ function applyScapeInternal(str: string) {
 		return c;
 	});
 }
-
-export function suffixString(str: string, suffix: number) {
-	return applyScapeInternal(str).append('_').append(encodeInt(suffix)).join('');
+export function applyEscape(str: string) {
+	return applyScapeInternal(str).join('');
 }
-export function applyScape(pattern: string) {
-	return applyScapeInternal(pattern).join('');
+export function removeEscape(str: string) {
+	str = str.replace(escapeEscape, escape);
+	escapes.forEach(
+		(e, index) => (str = str.replace(e, toEscape[index] as string)),
+	);
+	return str;
 }
 
 export function isBaseKey(key: string) {
@@ -72,4 +75,7 @@ export function getPageToken([strToken, results]: [string, string[]]) {
 		nextPageToken: nextPageToken || undefined,
 		results,
 	};
+}
+export function addSuffix(treatedKey: string, version: number): string {
+	return `${treatedKey}_${encodeInt(version)}`;
 }
