@@ -1,4 +1,4 @@
-import { applyEscape, removeEscape } from './utils';
+import { applyEscape, isBaseKey, removeEscape } from './utils';
 import { RedisStorageValueType } from './types';
 import { TreeKeyCacheSimpleRedisStorage } from './tree-key-cache-simple-redis-storage';
 import { fluentAsync, fluentForAsync } from '@codibre/fluent-iterable';
@@ -59,7 +59,7 @@ export class TreeKeyCacheInsertOnlyRedisStorage<
 
 	randomIterate(pattern?: string | undefined) {
 		return fluentAsync(super.randomIterate(pattern))
-			.filter((x) => !x.includes('_'))
+			.filter(isBaseKey)
 			.map(removeEscape);
 	}
 }
