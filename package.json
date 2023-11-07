@@ -1,7 +1,7 @@
 {
   "name": "@tree-key-cache/redis-storage",
   "description": "avro tree serializer fot tree-key-cache",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": false,
   "author": {
     "name": "Thiago O Santos <tos.oliveira@gmail.com>"

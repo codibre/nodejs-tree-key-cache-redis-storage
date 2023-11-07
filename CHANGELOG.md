@@ -1,3 +1,10 @@
+## [0.1.6](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/compare/v0.1.5...v0.1.6) (2023-11-07)
+
+
+### Bug Fixes
+
+* fixing base randomIterate ([#4](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/issues/4)) ([b20993f](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/commit/b20993f9c0a15d7b470e4a0422eeb67f5c24549d))
+
 ## [0.1.5](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/compare/v0.1.4...v0.1.5) (2023-11-07)
 
 
