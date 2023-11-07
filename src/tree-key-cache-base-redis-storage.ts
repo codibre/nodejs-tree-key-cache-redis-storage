@@ -2,6 +2,7 @@ import { KeyTreeCacheStorage } from 'tree-key-cache';
 import IORedis, { Redis } from 'ioredis';
 import { RedisConnection, RedisStorageValueType } from './types';
 import { depaginate } from '@codibre/fluent-iterable';
+import { getPageToken } from './utils';
 
 export interface TreeKeyCacheBaseRedisStorageNonRequiredOptions {
 	port: number;
@@ -95,19 +96,16 @@ export abstract class TreeKeyCacheBaseRedisStorage<
 			throw new Error('getChildren not supported!');
 		}
 		const childrenKey = this.getChildrenKey(key);
-		return depaginate(async (cursor: string | number = 0) => {
-			const [strToken, results] = await this.redisChildren.sscan(
-				childrenKey,
-				cursor,
-				'COUNT',
-				COUNT_CHILDREN,
-			);
-			const nextPageToken = Number(strToken);
-			return {
-				nextPageToken: nextPageToken || undefined,
-				results,
-			};
-		});
+		return depaginate(async (cursor: string | number = 0) =>
+			getPageToken(
+				await this.redisChildren.sscan(
+					childrenKey,
+					cursor,
+					'COUNT',
+					COUNT_CHILDREN,
+				),
+			),
+		);
 	}
 
 	async getCurrentTtl(key: string) {
@@ -127,13 +125,9 @@ export abstract class TreeKeyCacheBaseRedisStorage<
 					)
 			: (cursor: string | number = 0) =>
 					this.redisChildren.scan(cursor, 'COUNT', COUNT_CHILDREN);
-		return depaginate(async (token: string | number | undefined) => {
-			const [nextPageToken, results] = await getNext(token);
-			return {
-				nextPageToken,
-				results,
-			};
-		});
+		return depaginate(async (token: string | number | undefined) =>
+			getPageToken(await getNext(token)),
+		);
 	}
 
 	async registerChild(parentKey: string | undefined, partialKey: string) {

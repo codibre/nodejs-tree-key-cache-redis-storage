@@ -46,6 +46,13 @@ describe(TreeKeyCacheBaseRedisStorage.name, () => {
 		});
 	});
 
+	afterEach(async () => {
+		await targetBuffer['redisChildren'].flushall();
+		await targetBuffer['redisData'].flushall();
+		await targetString['redisChildren'].flushall();
+		await targetString['redisData'].flushall();
+	});
+
 	describe(proto.get.name, () => {
 		it('should return the saved value', async () => {
 			await targetBuffer['redisData'].set('my key', 'my value');
@@ -161,8 +168,7 @@ describe(TreeKeyCacheBaseRedisStorage.name, () => {
 	});
 
 	describe(proto.getChildren.name, () => {
-		it('should return undefined when no ttl is defined for the latest key version', async () => {
-			await targetString.set('my key', 'a', 123);
+		it('should return undefined when no ttl is defined', async () => {
 			await targetString.set('my key', 'b');
 
 			const result = await targetString.getCurrentTtl('my key');
@@ -170,8 +176,7 @@ describe(TreeKeyCacheBaseRedisStorage.name, () => {
 			expect(result).toBeUndefined();
 		});
 
-		it('should return registered ttl for the latest key version', async () => {
-			await targetString.set('my key', 'a');
+		it('should return registered ttl for the ', async () => {
 			await targetString.set('my key', 'b', 123);
 
 			const result = await targetString.getCurrentTtl('my key');
@@ -208,6 +213,30 @@ describe(TreeKeyCacheBaseRedisStorage.name, () => {
 
 			expect(result).toBeUndefined();
 			expect(targetBuffer['redisChildren'].sadd).toHaveCallsLike(['', 'b']);
+		});
+	});
+
+	describe(proto.randomIterate.name, () => {
+		it('should return all the registered keys when no parameters is passed', async () => {
+			await targetString['redisChildren'].set('my key 1', 'a1');
+			await targetString['redisChildren'].set('my key item 2', 'b1');
+			await targetString['redisChildren'].set('my key item 3', 'c1');
+
+			const result = await fluentAsync(targetString.randomIterate()).toArray();
+
+			expect(result).toEqual(['my key 1', 'my key item 2', 'my key item 3']);
+		});
+
+		it('should return all the matching registered keys when a parameters is passed', async () => {
+			await targetString['redisChildren'].set('my key 1', 'a1');
+			await targetString['redisChildren'].set('my key item 2', 'b1');
+			await targetString['redisChildren'].set('my key item 3', 'c1');
+
+			const result = await fluentAsync(
+				targetString.randomIterate('*item*'),
+			).toArray();
+
+			expect(result).toEqual(['my key item 2', 'my key item 3']);
 		});
 	});
 });
