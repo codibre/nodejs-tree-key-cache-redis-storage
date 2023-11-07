@@ -1,3 +1,11 @@
+## [0.1.5](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/compare/v0.1.4...v0.1.5) (2023-11-07)
+
+
+### Bug Fixes
+
+* fixing getChildren related methods ([#3](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/issues/3)) ([ef477fd](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/commit/ef477fdc2456e315c565d8ef56cc09a93eba9490))
+* improving tests ([#2](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/issues/2)) ([4324691](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/commit/43246911a19aef38d09c48d17e747e3f1755e938))
+
 ## [0.1.4](https://github.com/codibre/nodejs-tree-key-cache-redis-storage/compare/v0.1.3...v0.1.4) (2023-11-05)
 
 
